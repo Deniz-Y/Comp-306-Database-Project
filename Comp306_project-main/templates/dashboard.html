@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <title>Dashboard for {{role}}</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
+    <link rel="stylesheet"
+        href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0-beta2/css/bootstrap-select.min.css"
+        integrity="sha512-mR/b5Y7FRsKqrYZou7uysnOdCIJib/7r5QeJMFvLNHNhtye3xJp1TdJVPLtetkukFn227nKpXD9OjUc09lx97Q=="
+        crossorigin="anonymous" referrerpolicy="no-referrer" />
+</head>
+
+<body>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"
+        integrity="sha256-/xUj+3OJU5yExlq6GSYGSHk7tPXikynS7ogEvDej/m4=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-gtEjrD/SeCtmISkJkNUaaKMoLD0//ElJ19smozuHV6z3Iehds+3Ulb9Bn9Plx0x4"
+        crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-select/1.14.0-beta2/js/bootstrap-select.min.js"
+        integrity="sha512-FHZVRMUW9FsXobt+ONiix6Z0tIkxvQfxtCSirkKc5Sb4TKHmqq1dZa8DphF0XqKb3ldLu/wgMa8mT6uXiLlRlw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+    <h1 class="welcome">Welcome {{username}}. This is the dashboard for {{role}}s</h1>
+
+    <br>
+
+    <div class="buttons">
+
+        <form action="/selectCourseStudent" method="GET">
+            <label for="course_selection_stu">Course:</label>
+            <select id="course_selection_stu" name="course_selection_stu">
+                {% if courses %}
+                {% for course in courses %}
+                <option value="{{course}}" {% if selected_course and course==selected_course %} selected {% endif %}>
+                    {{course}} </option>
+                {% endfor %}
+                {% endif %}
+            </select>
+            <button class="btn">Get tutors</button>
+        </form>
+
+        <form action="/getPeriodsOfTutorStudent" method="POST">
+            <label for="tutor_selection_stu">Tutors:</label>
+            <select id="tutor_selection_stu" name="tutor_selection_stu">
+                {% if tutors %}
+                {% for tutor in tutors %}
+                <option value="{{tutor}}" {% if selected_tutor and tutor==selected_tutor %} selected {% endif %}>{{tutor}}</option>
+                {% endfor %}
+                {% endif %}
+            </select>
+            <input type="hidden" id="course_selection_stu" name="course_selection_stu"
+                value={{selected_course}}>
+            <button class="btn">Get Periods</button>
+        </form>
+
+        <form action="/getCubicle" method="POST">
+            <label for="period_selection_stu">Periods:</label>
+            <select id="period_selection_stu" name="period_selection_stu">
+                {% if tutorperiods %}
+                {% for period in tutorperiods %}
+                <option value="{{period}}" {% if selected_period and period==selected_period %} selected {% endif %}>{{period}}</option>
+                {% endfor %}
+                {% endif %}
+            </select>
+            <input type="hidden" id="course_selection_stu" name="course_selection_stu"
+                value={{selected_course}}>
+            <input type="hidden" id="tutor_selection_stu" name="tutor_selection_stu"
+                value={{selected_tutor}}>
+            <button class="btn">Get Cubicle</button>
+        </form>
+
+        <div>
+
+            <label for="cubicle_display">Cubicle No:</label>
+
+            {% if tutorcubicles %}
+            {% for cubicle in tutorcubicles %}
+            <div id="cubicle_display" class="d-inline p-2" value="{{cubicle}}">{{cubicle}}</div>
+            {% endfor %}
+            {% endif %}
+        </div>
+
+    </div>
+
+    {% if isTutor and isHeadTutor %}
+    <br>
+    <div class="tutor-info">
+        <h4>Tutor Information:</h4>
+        <p><strong>Username:</strong> {{ username }}</p>
+        <p><strong>Courses:</strong> {% for course in assigned_courses %}{{ course }} {% if not loop.last %} | {% endif %} {% endfor %}</p>
+        {% for period, cubicle_list in cubiclesOfTutor %}
+        <p>
+            <strong>Period:</strong> {{ period[0] }} {{ period[1] }} - <strong>Cubicle:</strong>
+            {% for cubicle in cubicle_list %}{{ cubicle }}{% if not loop.last %}, {% endif %}{% endfor %}
+        </p>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    {% if isHeadTutor %}
+    <br>
+    <h4>Tutor Information for Head Tutor:</h4>
+
+    {% for course, tutors in coursesWithItsTutors %}
+    <p><strong>Course Code:</strong> {{ course }}</p>
+    <p><strong>Tutors:</strong></p>
+    <ul>
+        {% for tutor in tutors %}
+        <li>{{ tutor[0] }}</li>
+        {% endfor %}
+    </ul>
+    {% endfor %}
+    {% endif %}
+
+    {% if role == "admin" %}
+    <br>
+    <div class="buttons">
+        <form action="/add-course" method="POST">
+            <label for="new_course_code">New course:</label>
+            <input type="text" id="new_course_code" name="new_course_code" placeholder="Enter course code" required>
+
+            <label for="new_course_name">Name:</label>
+            <input type="text" id="new_course_name" name="new_course_name" placeholder="Enter course name" required>
+
+            <button class="btn">Add new course</button>
+        </form>
+
+        <div class="buttons">    
+            <form action="/remove-course" method="POST">
+                <label for="course_selection">Courses:</label>
+                <select id="course_selection" name="course_selection" class="selectpicker" multiple
+                    aria-label="size 3 select example">
+                    {% for course in courses %}
+                    <option value="{{course}}">{{course}}</option>
+                    {% endfor %}
+                </select>
+    
+                <button class="btn">Remove course</button>
+            </form>
+        </div>
+
+        <form action="/add-period" method="POST">
+            <label for="new_day">Period day:</label>
+            <select id="day_selection" name="day_selection">
+                {% if all_days %}
+                {% for day in all_days %}
+                <option value="{{day}}">{{day}}</option>
+                {% endfor %}
+                {% endif %}
+            </select>
+
+            <label for="new_interval">Interval:</label>
+            <select id="interval_selection" name="interval_selection">
+                {% if all_intervals %}
+                {% for interval in all_intervals %}
+                <option value="{{interval}}">{{interval}}</option>
+                {% endfor %}
+                {% endif %}
+            </select>
+
+            <button class="btn">Add new period</button>
+        </form>
+
+        <div class="buttons">    
+            <form action="/remove-period" method="POST">
+                <label for="period_selection">Periods:</label>
+                <select id="period_selection" name="period_selection" class="selectpicker" multiple
+                    aria-label="size 3 select example">
+                    {% for period in periods %}
+                    <option value="{{period}}">{{period}}</option>
+                    {% endfor %}
+                </select>
+    
+                <button class="btn">Remove period</button>
+            </form>
+        </div>
+
+
+        <form action="/addTutor" method="POST">
+            <label for="username">Username:</label>
+            <select id="student_selection" name="student_selection">
+                {% if students %}
+                {% for student in students %}
+                <option value="{{student}}">{{student}}</option>
+                {% endfor %}
+                {% endif %}
+            </select>
+
+            <select id="tutor_course_selection" name="tutor_course_selection" class="selectpicker" multiple
+                aria-label="size 3 select example" required>
+                {% if courses %}
+                {% for course in courses %}
+                <option value="{{course}}">{{course}}</option>
+                {% endfor %}
+                {% endif %}
+            </select>
+
+            <button class="btn">Add new tutor</button>
+        </form>
+    </div>
+
+    <div class="buttons">
+        <form action="/assign-course" method="POST">
+            <label for="all_tutors">Tutor:</label>
+            <select id="all_tutors" name="all_tutors">
+                {% if all_tutors %}
+                {% for tutor in all_tutors %}
+                <option value="{{tutor}}" {% if selected_tutor and tutor==selected_tutor %} selected {% endif %}> {{tutor}} </option>
+                {% endfor %}
+                {% endif %}
+            </select>
+
+            <select id="course_selection" name="course_selection" class="selectpicker" multiple
+                aria-label="size 3 select example">
+                {% for course in courses %}
+                <option value="{{course}}">{{course}}</option>
+                {% endfor %}
+            </select>
+
+            <button class="btn">Assign course to tutor</button>
+        </form>
+    </div>
+
+    <div class="buttons">
+        <form action="/select-tutor" method="GET">
+            <label for="tutor">Tutor:</label>
+            <select id="all_tutors" name="all_tutors">
+                {% if all_tutors %}
+                {% for tutor in all_tutors %}
+                <option value="{{tutor}}" {% if selected_tutor and tutor==selected_tutor %} selected {% endif %}> {{tutor}} </option>
+                {% endfor %}
+                {% endif %}
+            </select>
+            <button class="btn">Get courses</button>
+        </form>
+
+        <form action="/unassign-course" method="POST">
+            <label for="course_selection">Courses:</label>
+            <select id="course_selection" name="course_selection" class="selectpicker" multiple
+                aria-label="size 3 select example">
+                {% for assigned_course in assigned_courses %}
+                <option value="{{assigned_course}}">{{assigned_course}}</option>
+                {% endfor %}
+            </select>
+
+            <input type="hidden" id="all_tutors" name="all_tutors" value={{selected_tutor}}>
+            <button>Unassign course from tutor</button>
+        </form>
+    </div>
+
+    <div class="buttons">
+        <form action="/addTutorPeriod" method="POST">
+            <label for="all_tutors">Tutor:</label>
+            <select id="all_tutors" name="all_tutors">
+                {% if all_tutors %}
+                {% for tutor in all_tutors %}
+                <option value="{{tutor}}" {% if selected_tutor and tutor==selected_tutor %} selected {% endif %}> {{tutor}} </option>
+                {% endfor %}
+                {% endif %}
+            </select>
+
+            <select id="period_selection" name="period_selection" class="selectpicker" multiple
+                aria-label="size 3 select example">
+                {% for period in periods %}
+                <option value="{{period}}">{{period}}</option>
+                {% endfor %}
+            </select>
+
+
+            <button class="btn">Assign period to tutor</button>
+        </form>
+    </div>
+
+
+    <div class="buttons">
+        <form action="/select-tutor-for-period" method="GET">
+            <label for="tutor">Tutor:</label>
+            <select id="all_tutors" name="all_tutors">
+                {% if all_tutors %}
+                {% for tutor in all_tutors %}
+                <option value="{{tutor}}" {% if selected_tutor and tutor==selected_tutor %} selected {% endif %}> {{tutor}} </option>
+                {% endfor %}
+                {% endif %}
+            </select>
+            <button class="btn">Get periods</button>
+        </form>
+
+        <form action="/unassign-period" method="POST">
+            <label for="period_selection">Periods:</label>
+            <select id="period_selection" name="period_selection" class="selectpicker" multiple
+                aria-label="size 3 select example">
+                {% for assigned_period in assigned_periods %}
+                <option value="{{assigned_period}}">{{assigned_period}}</option>
+                {% endfor %}
+            </select>
+
+            <input type="hidden" id="all_tutors" name="all_tutors" value={{selected_tutor}}>
+            <button class="btn" style="width:43%">Unassign period from tutor</button>
+        </form>
+    </div>
+
+
+
+    <div class="buttons">
+
+        <form action="/selectCourse" method="GET">
+            <label for="head_tutor_course_selection">Course:</label>
+            <select id="head_tutor_course_selection" name="head_tutor_course_selection">
+                {% if courses %}
+                {% for course in courses %}
+                <option value="{{course}}" {% if selected_course and course==selected_course %} selected {% endif %}>
+                    {{course}} </option>
+                {% endfor %}
+                {% endif %}
+            </select>
+            <button class="btn">Get tutors</button>
+        </form>
+
+        <form action="/assingHeadTutor" method="POST">
+            <label for="tutor_selection">Tutors:</label>
+            <select id="tutor_selection" name="tutor_selection">
+                {% if tutors %}
+                {% for tutor in tutors %}
+                <option value="{{tutor}}">{{tutor}}</option>
+                {% endfor %}
+                {% endif %}
+            </select>
+            <input type="hidden" id="head_tutor_course_selection" name="head_tutor_course_selection"
+                value={{selected_course}}>
+            <button class="btn">Assign Head Tutor</button>
+        </form>
+
+    </div>
+
+    <div class="buttons">
+        <form action="/select-tutor-for-period" method="GET">
+            <label for="tutor">Tutor:</label>
+            <select id="all_tutors" name="all_tutors">
+                {% if all_tutors %}
+                {% for tutor in all_tutors %}
+                <option value="{{tutor}}" {% if selected_tutor and tutor==selected_tutor %} selected {% endif %}> {{tutor}} </option>
+                {% endfor %}
+                {% endif %}
+            </select>
+            <button class="btn">Get periods</button>
+        </form>
+
+        <form action="/select-cubicle" method="GET">
+            <label for="assinged_period_selection">Periods:</label>
+            <select id="assinged_period_selection" name="assinged_period_selection" class="selectpicker"
+                aria-label="size 3 select example">
+                {% for assigned_period in assigned_periods %}
+                <option value="{{assigned_period}}">{{assigned_period}}</option>
+                {% endfor %}
+            </select>
+
+            <input type="hidden" id="all_tutors" name="all_tutors" value={{selected_tutor}}>
+            <button class="btn">Get Cubicles</button>
+        </form>
+
+        <form action="/assign-cubicle" method="POST">
+            <label for="cubicle-selection">Cubicles:</label>
+            <select id="cubicle-selection" name="cubicle-selection" class="selectpicker"
+                aria-label="size 3 select example">
+                {% for free_cubicle in free_cubicles %}
+                <option value="{{free_cubicle}}">{{free_cubicle}}</option>
+                {% endfor %}
+            </select>
+
+            <input type="hidden" id="assinged_period_selection" name="assinged_period_selection" value={{selected_assigned_period}}>
+            <input type="hidden" id="all_tutors" name="all_tutors" value={{selected_tutor}}>
+            <button class="btn">Assign Cubicle</button>
+        </form>
+
+
+        
+    </div>
+
+    <div class="buttons">
+        <form action="/select-tutor-for-unassinging-cubicle" method="GET">
+            <label for="tutor">Tutor:</label>
+            <select id="all_tutors" name="all_tutors">
+                {% if all_tutors %}
+                {% for tutor in all_tutors %}
+                <option value="{{tutor}}" {% if selected_tutor and tutor==selected_tutor %} selected {% endif %}> {{tutor}} </option>
+                {% endfor %}
+                {% endif %}
+            </select>
+            <button>Get Cubicles</button>
+        </form>
+
+
+        <form action="/unassign-cubicle" method="POST">
+            <label for="cubicle-selection">Cubicles:</label>
+            <select id="cubicle-selection" name="cubicle-selection" class="selectpicker"
+                aria-label="size 3 select example">
+                {% for assigned_cubicle in assigned_cubicles %}
+                <option value="{{assigned_cubicle}}">{{assigned_cubicle}}</option>
+                {% endfor %}
+            </select>
+
+            <input type="hidden" id="all_tutors" name="all_tutors" value={{selected_tutor}}>
+            <button>Unassign Cubicle</button>
+        </form>
+
+
+    </div>
+
+    {% endif %}
+
+
+
+
+
+    <br>
+    <div class="buttons">
+        <form action="/logout" method="POST">
+            <button class="btn">Logout</button>
+        </form>
+    </div>
+
+
+    {% if error_message %}
+        <p class="error-message">{{ error_message }}</p>
+    {% endif %}
+</body>
+
+
+</html>

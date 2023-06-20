@@ -1,0 +1,7 @@
+tp_id-cubicle TABLE: many-to-1
+
+student için, course'ları multiple select yap, tüm bu course'ları veren tutor'ları döndür
+
+tutor-period için kısıtlama -> max 3 tane assign olabilir
+
+error message döndürme
